@@ -1035,6 +1035,13 @@ h1 {
     .descargar {
         width: 10px;
     }
+    .h1-Como-trabajo {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .pt-v{
+        font-size: 15px;
+    }
 
     .h1-des {
         text-align: center;
@@ -1069,7 +1076,7 @@ h1 {
         background-color: #ffffff00;
         margin-right: 10px;
     }
-
+   
     .img {
         width: 305px;
         border: 1px solid rgba(0, 0, 255, 0);

@@ -80,7 +80,7 @@
 
     /*datod video*/
     --video-info: rgba(228, 228, 228, 0.767);
-    
+
     /*texto como trabajo*/
     --pt-v-: #000000;
     --dteg: white;
@@ -498,6 +498,8 @@ h3 {
         margin-top: 1px;
     }
 
+   
+
     .contenido {
         height: auto;
         display: flex;
@@ -833,12 +835,12 @@ a {
 }
 
 .img-gfoto {
-    width: 20px;
+    width: 10px;
 
 }
 
 .h1-Como-trabajo {
-    margin-top: 30px;
+    margin-top: 20px;
     margin-bottom: 30px;
 }
 
@@ -848,6 +850,7 @@ a {
     display: flex;
     justify-content: space-around;
 }
-.Google{
+
+.Google {
     color: var(--pt-v-);
 }
