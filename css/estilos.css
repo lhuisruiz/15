@@ -832,10 +832,12 @@ a {
     text-align: left;
     line-height: 1.4;
     color: var(--pt-v-);
+    font-size: 20px;
+    
 }
 
 .img-gfoto {
-    width: 10px;
+    width: 30px;
 
 }
 
@@ -852,5 +854,8 @@ a {
 }
 
 .Google {
+    color: var(--pt-v-);
+}
+.hhh{
     color: var(--pt-v-);
 }

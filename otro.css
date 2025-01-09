@@ -115,20 +115,21 @@ html {
     .Trabajos{
         margin-top: 0px;
     }
+    .pt-v{
+        font-size: 17px;
+        color: red;
+    }
 }
+@media (max-width: 620px) {
+    .h1-Como-trabajo{
+        margin-bottom: 10px;
+    }
+    .pt-v{
+        font-size: 15px;
+        color: rgb(104, 179, 7);
+    }
 
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
 }
-
-
-
-
-
-
-
 
 
 body {
@@ -230,7 +231,7 @@ header nav ul li a {
 
 .linea {
     width: 100%;
-    height: 100px;
+    height: 60px;
 
 }
 
@@ -1042,6 +1043,9 @@ h1 {
     .pt-v{
         font-size: 15px;
     }
+    .img-gfoto{
+        width: 15px;
+    }
 
     .h1-des {
         text-align: center;
@@ -1168,7 +1172,8 @@ h1 {
         line-height: 10px;
         font-size: 10px;
     }
-
+    .Galeria {
+        margin-top: 50px;    }
 
 }
 
