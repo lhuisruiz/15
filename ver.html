@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa </title>
+    <title>Mapa con LeafletJS y Cálculo de Costo</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
@@ -35,7 +35,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Calcular presupuesto de fotos</h1>
+        <h1>Armar presupuesto</h1>
         
         <label for="location">Introduce el destino:</label>
         <input type="text" id="location" placeholder="Ej: Buenos Aires">
@@ -80,7 +80,7 @@
                 return;
             }
 
-            const month = new Date(date).getMonth(); 
+            const month = new Date(date).getMonth(); // Obtener el mes (enero = 0, febrero = 1, etc.)
 
             fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
                 .then(response => response.json())
@@ -121,7 +121,7 @@
                 ],
                 routeWhileDragging: true,
                 lineOptions: {
-                    styles: [{ color: 'rgba(0, 255, 255, 0)', weight: 4, opacity: 0.2 }] // Línea con transparencia
+                    styles: [{ color: '#00000000', weight: 4, opacity: 0.2 }] // Línea con transparencia
                 },
                 createMarker: () => null,
                 showAlternatives: false,
@@ -130,23 +130,25 @@
 
             routeControl.on('routesfound', (e) => {
                 const routes = e.routes;
-                const distance = routes[0].summary.totalDistance / 1000;
-                let pricePerKm = 20000 + (month * 3000);
+                const distance = routes[0].summary.totalDistance / 1000; // Distancia en km
 
-                let totalPrice = 100000;
-                let extraKm = distance - 3;
+                let basePrice = 100000 + (month * 3000); // Los primeros 3 km a 100,000 pesos + 3,000 por cada mes
+                let totalPrice = basePrice;
+
+                let extraKm = distance - 3; // Kilómetros adicionales después de los primeros 3 km
                 if (extraKm > 0) {
-                    totalPrice += extraKm * (pricePerKm + 2000);
+                    totalPrice += extraKm * 3000; // Añadir 2,000 por cada km adicional
                 }
 
-                totalPrice = totalPrice.toFixed(0);
+                totalPrice = totalPrice.toFixed(0); // Redondear a entero
 
                 // Formatear la fecha de manera correcta (en formato DD/MM/YYYY)
                 const formattedDate = new Date(date).toLocaleDateString('es-ES');
 
-                // Mostrar el resultado con la fecha correctamente formateada
+                // Mostrar el resultado con la distancia, fecha y precio correctamente formateados
                 document.getElementById('result').innerText = 
                     `Fecha: ${formattedDate}\n` +
+                    `Distancia: ${distance.toFixed(2)} km\n` +
                     `Precio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
             });
 
