@@ -1,1 +1,159 @@
-<iframe src="https://docs.google.com/spreadsheets/d/1ydn0BJFkdGBeDBocckv_r1dy8arHITC7fiqoQOhecG4/edit?usp=sharing" width="100%" height="100%" allow="autoplay"></iframe>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa </title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+        .container {
+            margin: 20px;
+        }
+
+        /* Ocultar el contenedor de instrucciones de la ruta */
+        .leaflet-routing-container {
+            display: none !important;
+        }
+
+        /* Ocultar la barra de control de la ruta (botones de alternancia, zoom, etc.) */
+        .leaflet-bar,
+        .leaflet-routing-controls {
+            display: none !important;
+        }
+
+        /* Ocultar el control de zoom de leaflet */
+        .leaflet-control-zoom {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calcular presupuesto de fotos</h1>
+        
+        <label for="location">Introduce el destino:</label>
+        <input type="text" id="location" placeholder="Ej: Buenos Aires">
+        <br><br>
+
+        <label for="date">Selecciona la fecha:</label>
+        <input type="date" id="date">
+        <br><br>
+        
+        <button id="search">Buscar y Calcular</button>
+        
+        <p id="result"></p>
+        
+        <div id="map"></div> <!-- Contenedor del mapa -->
+    </div>
+
+    <script>
+        const initialPoint = [-34.452115, -58.826254];
+        const map = L.map('map').setView(initialPoint, 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let routeControl;
+
+        // Usar el ícono predeterminado de Leaflet para ubicación
+        const locationIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png', // Ícono predeterminado de Leaflet
+            iconSize: [25, 41], // Tamaño del ícono
+            iconAnchor: [12, 41], // Punto de anclaje del ícono
+            popupAnchor: [1, -34] // Donde se abre el popup
+        });
+
+        document.getElementById('search').addEventListener('click', () => {
+            const location = document.getElementById('location').value;
+            const date = document.getElementById('date').value;
+
+            if (!location || !date) {
+                alert("Por favor, introduce una ubicación y una fecha.");
+                return;
+            }
+
+            const month = new Date(date).getMonth(); 
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        alert("No se encontró la ubicación. Intenta con otra.");
+                        return;
+                    }
+
+                    const { lat, lon } = data[0];
+                    const destination = [parseFloat(lat), parseFloat(lon)];
+
+                    map.setView(destination, 13);
+
+                    // Agregar el ícono de ubicación en la ubicación de destino
+                    L.marker(destination, { icon: locationIcon })
+                        .addTo(map)
+                        .bindPopup(`Destino: ${location}`)
+                        .openPopup();
+
+                    calculateRoute(initialPoint, destination, month, date);
+                })
+                .catch(error => {
+                    console.error("Error al buscar la ubicación:", error);
+                    alert("Hubo un problema al buscar la ubicación.");
+                });
+        });
+
+        function calculateRoute(origin, destination, month, date) {
+            if (routeControl) {
+                map.removeControl(routeControl);
+            }
+
+            routeControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(origin[0], origin[1]),
+                    L.latLng(destination[0], destination[1])
+                ],
+                routeWhileDragging: true,
+                lineOptions: {
+                    styles: [{ color: 'rgba(0, 255, 255, 0)', weight: 4, opacity: 0.2 }] // Línea con transparencia
+                },
+                createMarker: () => null,
+                showAlternatives: false,
+                instructions: false 
+            }).addTo(map);
+
+            routeControl.on('routesfound', (e) => {
+                const routes = e.routes;
+                const distance = routes[0].summary.totalDistance / 1000;
+                let pricePerKm = 20000 + (month * 3000);
+
+                let totalPrice = 100000;
+                let extraKm = distance - 3;
+                if (extraKm > 0) {
+                    totalPrice += extraKm * (pricePerKm + 2000);
+                }
+
+                totalPrice = totalPrice.toFixed(0);
+
+                // Formatear la fecha de manera correcta (en formato DD/MM/YYYY)
+                const formattedDate = new Date(date).toLocaleDateString('es-ES');
+
+                // Mostrar el resultado con la fecha correctamente formateada
+                document.getElementById('result').innerText = 
+                    `Fecha: ${formattedDate}\n` +
+                    `Precio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+            });
+
+            routeControl.on('routingerror', () => {
+                alert("No se pudo calcular la ruta. Intenta con otra ubicación.");
+            });
+        }
+    </script>
+</body>
+</html>
