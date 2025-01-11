@@ -15,19 +15,13 @@
         .container {
             margin: 20px;
         }
-
-        /* Ocultar el contenedor de instrucciones de la ruta */
         .leaflet-routing-container {
             display: none !important;
         }
-
-        /* Ocultar la barra de control de la ruta (botones de alternancia, zoom, etc.) */
         .leaflet-bar,
         .leaflet-routing-controls {
             display: none !important;
         }
-
-        /* Ocultar el control de zoom de leaflet */
         .leaflet-control-zoom {
             display: none !important;
         }
@@ -37,137 +31,169 @@
     <div class="container">
         <h1>Mapa con LeafletJS y Cálculo de Distancia</h1>
         
-        <label for="location">Introduce el destino:</label>
-        <input type="text" id="location" placeholder="Ej: Buenos Aires">
-        <br><br>
-
         <label for="date">Selecciona la fecha:</label>
         <input type="date" id="date">
         <br><br>
+
+        <label for="destination-name">Introduce un destino (opcional):</label>
+        <input type="text" id="destination-name" placeholder="Ej: Trabajo, Casa de Juan">
+        <br><br>
+
+        <button id="calculate">Buscar y Calcular</button>
+        <br><br>
         
-        <button id="search">Buscar y Calcular</button>
+        <div id="details">
+            <p id="result"></p>
+            <button id="whatsapp" style="display:none;">Enviar a WhatsApp</button>
+        </div>
         
-        <p id="result"></p>
-        <button id="whatsapp" style="display:none;">Enviar a WhatsApp</button>
-        
-        <div id="map"></div> <!-- Contenedor del mapa -->
+        <div id="map"></div>
     </div>
 
     <script>
-        const initialPoint = [-34.452115, -58.826254];
-        const map = L.map('map').setView(initialPoint, 13);
+    const initialPoint = [-34.452115, -58.826254];
+    const map = L.map('map').setView(initialPoint, 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
-        let routeControl;
+    let routeControl;
+    let destinationMarker;
+    let selectedDestination = null;
+    let destinationName = "";
 
-        // Usar el ícono predeterminado de Leaflet para ubicación
-        const locationIcon = L.icon({
-            iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png', // Ícono predeterminado de Leaflet
-            iconSize: [25, 41], // Tamaño del ícono
-            iconAnchor: [12, 41], // Punto de anclaje del ícono
-            popupAnchor: [1, -34] // Donde se abre el popup
-        });
+    const locationIcon = L.icon({
+        iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34]
+    });
 
-        document.getElementById('search').addEventListener('click', () => {
-            const location = document.getElementById('location').value;
-            const date = document.getElementById('date').value;
+    // Evento al seleccionar un punto en el mapa
+    map.on('click', (e) => {
+        selectedDestination = [e.latlng.lat, e.latlng.lng];
+        destinationName = "Ubicación seleccionada en el mapa";
+        setDestinationMarker(selectedDestination, destinationName);
+    });
 
-            if (!location || !date) {
-                alert("Por favor, introduce una ubicación y una fecha.");
-                return;
-            }
+    document.getElementById('calculate').addEventListener('click', () => {
+        const date = document.getElementById('date').value;
+        const inputDestinationName = document.getElementById('destination-name').value;
 
-            const month = new Date(date).getMonth(); // Obtener el mes (enero = 0, febrero = 1, etc.)
+        // Usar el nombre del destino ingresado si existe, de lo contrario mantener el seleccionado en el mapa
+        if (inputDestinationName) {
+            destinationName = inputDestinationName;
+        }
 
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
+        if (!selectedDestination && !inputDestinationName) {
+            alert("Por favor, selecciona un punto en el mapa o escribe un destino.");
+            return;
+        }
+
+        if (!date) {
+            alert("Por favor, selecciona una fecha.");
+            return;
+        }
+
+        if (inputDestinationName && !selectedDestination) {
+            // Si se ingresó un destino, buscarlo en el mapa
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputDestinationName)}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.length === 0) {
-                        alert("No se encontró la ubicación. Intenta con otra.");
+                        alert("No se encontró la ubicación escrita. Intenta con otra.");
                         return;
                     }
 
                     const { lat, lon } = data[0];
-                    const destination = [parseFloat(lat), parseFloat(lon)];
-
-                    map.setView(destination, 13);
-
-                    // Agregar el ícono de ubicación en la ubicación de destino
-                    L.marker(destination, { icon: locationIcon })
-                        .addTo(map)
-                        .bindPopup(`Destino: ${location}`)
-                        .openPopup();
-
-                    calculateRoute(initialPoint, destination, month, date, location);
+                    selectedDestination = [parseFloat(lat), parseFloat(lon)];
+                    setDestinationMarker(selectedDestination, inputDestinationName);
+                    const month = new Date(date).getMonth();
+                    calculateRoute(initialPoint, selectedDestination, month, date, destinationName);
                 })
                 .catch(error => {
                     console.error("Error al buscar la ubicación:", error);
                     alert("Hubo un problema al buscar la ubicación.");
                 });
-        });
+        } else {
+            // Si ya hay una ubicación seleccionada en el mapa
+            const month = new Date(date).getMonth();
+            calculateRoute(initialPoint, selectedDestination, month, date, destinationName);
+        }
+    });
 
-        function calculateRoute(origin, destination, month, date, location) {
-            if (routeControl) {
-                map.removeControl(routeControl);
+    function setDestinationMarker(destination, popupText) {
+        if (destinationMarker) {
+            map.removeLayer(destinationMarker);
+        }
+
+        destinationMarker = L.marker(destination, { icon: locationIcon })
+            .addTo(map)
+            .bindPopup(popupText)
+            .openPopup();
+
+        map.setView(destination, 13);
+    }
+
+    function calculateRoute(origin, destination, month, date, destinationName) {
+        if (routeControl) {
+            map.removeControl(routeControl);
+        }
+
+        routeControl = L.Routing.control({
+            waypoints: [
+                L.latLng(origin[0], origin[1]),
+                L.latLng(destination[0], destination[1])
+            ],
+            routeWhileDragging: true,
+            lineOptions: {
+                styles: [{ color: '#00000000', weight: 4, opacity: 0.2 }]
+            },
+            createMarker: () => null,
+            showAlternatives: false,
+            instructions: false
+        }).addTo(map);
+
+        routeControl.on('routesfound', (e) => {
+            const routes = e.routes;
+            const distance = routes[0].summary.totalDistance / 1000;
+
+            let basePrice = 100000 + (month * 3000);
+            let totalPrice = basePrice;
+
+            let extraKm = distance - 3;
+            if (extraKm > 0) {
+                totalPrice += extraKm * 2000;
             }
 
-            routeControl = L.Routing.control({
-                waypoints: [
-                    L.latLng(origin[0], origin[1]),
-                    L.latLng(destination[0], destination[1])
-                ],
-                routeWhileDragging: true,
-                lineOptions: {
-                    styles: [{ color: '#00000000', weight: 4, opacity: 0.2 }] // Línea con transparencia
-                },
-                createMarker: () => null,
-                showAlternatives: false,
-                instructions: false 
-            }).addTo(map);
+            totalPrice = totalPrice.toFixed(0);
+            const formattedDate = new Date(date).toLocaleDateString('es-ES');
 
-            routeControl.on('routesfound', (e) => {
-                const routes = e.routes;
-                const distance = routes[0].summary.totalDistance / 1000; // Distancia en km
+            const resultText =
+                `Destino: ${destinationName}<br>` +
+                `Fecha: ${formattedDate}<br>` +
+                `Distancia: ${distance.toFixed(2)} km<br>` +
+                `Precio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
 
-                let basePrice = 100000 + (month * 3000); // Los primeros 3 km a 100,000 pesos + 3,000 por cada mes
-                let totalPrice = basePrice;
+            document.getElementById('result').innerHTML = resultText;
 
-                let extraKm = distance - 3; // Kilómetros adicionales después de los primeros 3 km
-                if (extraKm > 0) {
-                    totalPrice += extraKm * 2000; // Añadir 2,000 por cada km adicional
-                }
+            const googleMapsLink = `https://www.google.com/maps?q=${destination[0]},${destination[1]}`;
+            const whatsappMessage = encodeURIComponent(`Destino: ${destinationName}\nFecha: ${formattedDate}\nDistancia: ${distance.toFixed(2)} km\nPrecio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}\nMapa: ${googleMapsLink}`);
+            const whatsappLink = `https://wa.me/541144382987?text=${whatsappMessage}`;
 
-                totalPrice = totalPrice.toFixed(0); // Redondear a entero
+            const whatsappButton = document.getElementById('whatsapp');
+            whatsappButton.style.display = 'inline-block';
+            whatsappButton.onclick = () => {
+                window.open(whatsappLink, '_blank');
+            };
+        });
 
-                // Formatear la fecha de manera correcta (en formato DD/MM/YYYY)
-                const formattedDate = new Date(date).toLocaleDateString('es-ES');
-
-                // Mostrar el resultado con la distancia, fecha y precio correctamente formateados
-                document.getElementById('result').innerText = 
-                    `Fecha: ${formattedDate}\n` +
-                    `Distancia: ${distance.toFixed(2)} km\n` +
-                    `Precio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
-
-                // Crear el enlace de WhatsApp con los datos (ahora incluye el valor de 'location')
-                const whatsappMessage = encodeURIComponent(`Destino: ${location}\nFecha: ${formattedDate}\nDistancia: ${distance.toFixed(2)} km\nPrecio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`);
-                const whatsappLink = `https://wa.me/541144382987?text=${whatsappMessage}`;
-
-                // Hacer visible el botón de WhatsApp
-                const whatsappButton = document.getElementById('whatsapp');
-                whatsappButton.style.display = 'inline-block';
-                whatsappButton.onclick = () => {
-                    window.open(whatsappLink, '_blank');
-                };
-            });
-
-            routeControl.on('routingerror', () => {
-                alert("No se pudo calcular la ruta. Intenta con otra ubicación.");
-            });
-        }
+        routeControl.on('routingerror', () => {
+            alert("No se pudo calcular la ruta. Intenta con otra ubicación.");
+        });
+    }
     </script>
 </body>
 </html>
