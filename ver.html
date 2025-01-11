@@ -35,7 +35,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Armar presupuesto</h1>
+        <h1>Mapa con LeafletJS y Cálculo de Distancia</h1>
         
         <label for="location">Introduce el destino:</label>
         <input type="text" id="location" placeholder="Ej: Buenos Aires">
@@ -48,6 +48,7 @@
         <button id="search">Buscar y Calcular</button>
         
         <p id="result"></p>
+        <button id="whatsapp" style="display:none;">Enviar a WhatsApp</button>
         
         <div id="map"></div> <!-- Contenedor del mapa -->
     </div>
@@ -101,7 +102,7 @@
                         .bindPopup(`Destino: ${location}`)
                         .openPopup();
 
-                    calculateRoute(initialPoint, destination, month, date);
+                    calculateRoute(initialPoint, destination, month, date, location);
                 })
                 .catch(error => {
                     console.error("Error al buscar la ubicación:", error);
@@ -109,7 +110,7 @@
                 });
         });
 
-        function calculateRoute(origin, destination, month, date) {
+        function calculateRoute(origin, destination, month, date, location) {
             if (routeControl) {
                 map.removeControl(routeControl);
             }
@@ -121,7 +122,7 @@
                 ],
                 routeWhileDragging: true,
                 lineOptions: {
-                    styles: [{ color: '#00000000', weight: 4, opacity: 0.2 }] // Línea con transparencia
+                    styles: [{ color: 'blue', weight: 4, opacity: 0.2 }] // Línea con transparencia
                 },
                 createMarker: () => null,
                 showAlternatives: false,
@@ -137,7 +138,7 @@
 
                 let extraKm = distance - 3; // Kilómetros adicionales después de los primeros 3 km
                 if (extraKm > 0) {
-                    totalPrice += extraKm * 3000; // Añadir 2,000 por cada km adicional
+                    totalPrice += extraKm * 2000; // Añadir 2,000 por cada km adicional
                 }
 
                 totalPrice = totalPrice.toFixed(0); // Redondear a entero
@@ -150,6 +151,17 @@
                     `Fecha: ${formattedDate}\n` +
                     `Distancia: ${distance.toFixed(2)} km\n` +
                     `Precio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+
+                // Crear el enlace de WhatsApp con los datos (ahora incluye el valor de 'location')
+                const whatsappMessage = encodeURIComponent(`Destino: ${location}\nFecha: ${formattedDate}\nDistancia: ${distance.toFixed(2)} km\nPrecio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`);
+                const whatsappLink = `https://wa.me/1144382987?text=${whatsappMessage}`;
+
+                // Hacer visible el botón de WhatsApp
+                const whatsappButton = document.getElementById('whatsapp');
+                whatsappButton.style.display = 'inline-block';
+                whatsappButton.onclick = () => {
+                    window.open(whatsappLink, '_blank');
+                };
             });
 
             routeControl.on('routingerror', () => {
