@@ -122,7 +122,7 @@
                 ],
                 routeWhileDragging: true,
                 lineOptions: {
-                    styles: [{ color: 'blue', weight: 4, opacity: 0.2 }] // Línea con transparencia
+                    styles: [{ color: '#00000000', weight: 4, opacity: 0.2 }] // Línea con transparencia
                 },
                 createMarker: () => null,
                 showAlternatives: false,
@@ -154,7 +154,7 @@
 
                 // Crear el enlace de WhatsApp con los datos (ahora incluye el valor de 'location')
                 const whatsappMessage = encodeURIComponent(`Destino: ${location}\nFecha: ${formattedDate}\nDistancia: ${distance.toFixed(2)} km\nPrecio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`);
-                const whatsappLink = `https://wa.me/1144382987?text=${whatsappMessage}`;
+                const whatsappLink = `https://wa.me/541144382987?text=${whatsappMessage}`;
 
                 // Hacer visible el botón de WhatsApp
                 const whatsappButton = document.getElementById('whatsapp');
