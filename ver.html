@@ -10,6 +10,40 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+    <link rel="icon" type="image/x-icon"
+    href="https://res.cloudinary.com/fotoqe123/image/upload/v1720052795/ABAUT/logo-modified_co2oj7_uaw1ee.ico">
+<link rel="canonical" href="https://lhuisruiz.github.io/15/">
+<meta property="og:site_name" content="lhuis">
+<meta property="og:title" content="lhuis">
+<meta property="og:url" content="https://lhuisruiz.github.io/15/">
+<meta property="og:type" content="website">
+<meta property="og:ttl" content="864000">
+<meta property="og:description"
+    content="Hola soy lhuis, Fotografo por diversión, Quererse a uno mismo es el principio de un romance para toda la vida. 🖤">
+<meta property="og:image"
+    content="https://res.cloudinary.com/fotoqe123/image/upload/v1730526442/ABAUT/f_10_hgcaky.jpg">
+<meta property="og:image:width" content="345">
+<meta property="og:image:height" content="518">
+<meta itemprop="name" content="lhuis">
+<meta itemprop="url" content="https://lhuisruiz.github.io/15/">
+<meta itemprop="description"
+    content="Hola soy lhuis, Fotografo por diversión, Quererse a uno mismo es el principio de un romance para toda la vida. 🖤">
+<meta itemprop="thumbnailUrl"
+    content="https://res.cloudinary.com/fotoqe123/image/upload/v1730526442/ABAUT/f_10_hgcaky.jpg">
+<meta name="twitter:title" content="lhuis">
+<meta name="twitter:image"
+    content="https://res.cloudinary.com/fotoqe123/image/upload/v1730526442/ABAUT/f_10_hgcaky.jpg">
+<meta name="twitter:url" content="https://lhuisruiz.github.io/15/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:description"
+    content="Hola soy lhuis, Fotografo por diversión, Quererse a uno mismo es el principio de un romance para toda la vida. 🖤">
+<meta name="description"
+    content="Hola soy lhuis, Fotografo por diversión, Quererse a uno mismo es el principio de un romance para toda la vida. 🖤">
+<meta name="robots" content="noindex">
+
+
+
     <style>
         * {
             margin: 0;
@@ -508,155 +542,163 @@
                 instructions: false
             }).addTo(map);
 
+            // whatsapppp--------------------------------
+
             routeControl.on('routesfound', (e) => {
-                const routes = e.routes;
-                const distance = routes[0].summary.totalDistance / 1000;
+    const routes = e.routes;
+    const distance = routes[0].summary.totalDistance / 1000;
 
-                let basePrice = 100000 + (month * 3000);
-                let totalPrice = basePrice;
+    let basePrice = 100000 + (month * 3000);
+    let totalPrice = basePrice;
 
-                let extraKm = distance - 3;
-                if (extraKm > 0) {
-                    totalPrice += extraKm * 2000;
-                }
-                document.getElementById('calculate').addEventListener('click', () => {
-                    const date = document.getElementById('date').value;
-                    const inputDestinationName = document.getElementById('destination-name').value;
+    let extraKm = distance - 3;
+    if (extraKm > 0) {
+        totalPrice += extraKm * 2000;
+    }
 
-                    // Usar el nombre del destino ingresado si existe, de lo contrario mantener el seleccionado en el mapa
-                    if (inputDestinationName) {
-                        destinationName = inputDestinationName;
-                    }
+    document.getElementById('calculate').addEventListener('click', () => {
+        const date = document.getElementById('date').value;
+        const inputDestinationName = document.getElementById('destination-name').value;
 
-                    if (!selectedDestination && !inputDestinationName) {
-                        alert("Por favor, selecciona un punto en el mapa o escribe un destino.");
+        // Usar el nombre del destino ingresado si existe, de lo contrario mantener el seleccionado en el mapa
+        if (inputDestinationName) {
+            destinationName = inputDestinationName;
+        }
+
+        if (!selectedDestination && !inputDestinationName) {
+            alert("Por favor, selecciona un punto en el mapa o escribe un destino.");
+            return;
+        }
+
+        if (!date) {
+            alert("Por favor, selecciona una fecha.");
+            return;
+        }
+
+        const isHalfDay = document.getElementById('mitadcompleta').checked; // Verificar si el checkbox está marcado
+
+        if (inputDestinationName && !selectedDestination) {
+            // Si se ingresó un destino, buscarlo en el mapa
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputDestinationName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        alert("No se encontró la ubicación escrita. Intenta con otra.");
                         return;
                     }
 
-                    if (!date) {
-                        alert("Por favor, selecciona una fecha.");
-                        return;
-                    }
+                    const { lat, lon } = data[0];
+                    selectedDestination = [parseFloat(lat), parseFloat(lon)];
+                    setDestinationMarker(selectedDestination, inputDestinationName);
+                    const month = new Date(date).getMonth();
+                    calculateRoute(initialPoint, selectedDestination, month, date, destinationName, isHalfDay); // Pasar el valor del checkbox
+                })
 
-                    const isHalfDay = document.getElementById('mitadcompleta').checked; // Verificar si el checkbox está marcado
+        } else {
+            // Si ya hay una ubicación seleccionada en el mapa
+            const month = new Date(date).getMonth();
+            calculateRoute(initialPoint, selectedDestination, month, date, destinationName, isHalfDay); // Pasar el valor del checkbox
+        }
+    });
 
-                    if (inputDestinationName && !selectedDestination) {
-                        // Si se ingresó un destino, buscarlo en el mapa
-                        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputDestinationName)}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.length === 0) {
-                                    alert("No se encontró la ubicación escrita. Intenta con otra.");
-                                    return;
-                                }
+    destinationName = document.getElementById('destination-name');
+    destinationName = document.getElementById('destination-name').value;
 
-                                const { lat, lon } = data[0];
-                                selectedDestination = [parseFloat(lat), parseFloat(lon)];
-                                setDestinationMarker(selectedDestination, inputDestinationName);
-                                const month = new Date(date).getMonth();
-                                calculateRoute(initialPoint, selectedDestination, month, date, destinationName, isHalfDay); // Pasar el valor del checkbox
-                            })
+    // Nueva variable para obtener el valor del input 'destinationN'
+    const destinationNValue = document.getElementById('destinationN').value; // Aquí obtenemos el valor del input
 
-                    } else {
-                        // Si ya hay una ubicación seleccionada en el mapa
-                        const month = new Date(date).getMonth();
-                        calculateRoute(initialPoint, selectedDestination, month, date, destinationName, isHalfDay); // Pasar el valor del checkbox
-                    }
-                });
-                destinationName = document.getElementById('destination-name');
-                destinationName = document.getElementById('destination-name').value;
+    function calculateRoute(origin, destination, month, date, destinationName, isHalfDay) {
+        if (routeControl) {
+            map.removeControl(routeControl);
+        }
+
+        routeControl = L.Routing.control({
+            waypoints: [
+                L.latLng(origin[0], origin[1]),
+                L.latLng(destination[0], destination[1])
+            ],
+            routeWhileDragging: true,
+            lineOptions: {
+                styles: [{ color: '#00000000', weight: 4, opacity: 0.2 }]
+            },
+            createMarker: () => null,
+            showAlternatives: false,
+            instructions: false
+        }).addTo(map);
+
+        routeControl.on('routesfound', (e) => {
+            const routes = e.routes;
+            const distance = routes[0].summary.totalDistance / 1000;
+
+            let basePrice = 100000 + (month * 3000);
+            let totalPrice = basePrice;
+
+            let extraKm = distance - 3;
+            if (extraKm > 0) {
+                totalPrice += extraKm * 2000;
+            }
+
+            // Aplicar descuento si es media jornada
+            if (isHalfDay) {
+                totalPrice *= 0.7;
+            }
+
+            totalPrice = totalPrice.toFixed(0);
+            const formattedDate = new Date(date).toLocaleDateString('es-ES');
+
+            const resultText =
+                `Destino: ${destinationName}<br>` +
+                `Ubicación escrita: ${destinationNValue}<br>` +  // Mostrar el valor ingresado en 'destinationN'
+                `Fecha: ${formattedDate}<br>` +
+                `Distancia: ${distance.toFixed(2)} km<br>` +
+                `Precio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}` +
+                `<br>Media jornada: ${isHalfDay ? 'Sí' : 'No'}`;  // Mostrar si es media jornada o no
+
+            document.getElementById('result').innerHTML = resultText;
+
+            const googleMapsLink = `https://www.google.com/maps?q=${destination[0]},${destination[1]}`;
+            const whatsappMessage = encodeURIComponent(`Destino: ${destinationName}\nUbicación: ${destinationNValue}\nFecha: ${formattedDate}\nDistancia: ${distance.toFixed(2)} km\nPrecio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}\nMedia jornada: ${isHalfDay ? 'Sí' : 'No'}\nMapa: ${googleMapsLink}`);
+            const whatsappLink = `https://wa.me/541144382987?text=${whatsappMessage}`;
+
+            const whatsappButton = document.getElementById('whatsapp');
+            whatsappButton.style.display = 'inline-block';
+            whatsappButton.onclick = () => {
+                window.open(whatsappLink, '_blank');
+            };
+        });
+
+        routeControl.on('routingerror', () => {
+            alert("No se pudo calcular la ruta. Intenta con otra ubicación.");
+        });
+    }
+
+    totalPrice = totalPrice.toFixed(0);
+    const formattedDate = new Date(date).toLocaleDateString('es-ES');
+
+    const resultText =
+        `Destino: ${destinationName}<br>` +
+        `Fecha: ${formattedDate}<br>` +
+        `Distancia: ${distance.toFixed(2)} km<br>` +
+        `Precio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}` +
+        `<br>Media jornada: ${isHalfDay ? 'Sí' : 'No'}`;  // Mostrar si es media jornada o no
+
+    document.getElementById('result').innerHTML = resultText;
+
+    const googleMapsLink = `https://www.google.com/maps?q=${destination[0]},${destination[1]}`;
+    const whatsappMessage = encodeURIComponent(`Destino: ${destinationName}\nFecha: ${formattedDate}\nDistancia: ${distance.toFixed(2)} km\nPrecio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}\nMedia jornada: ${isHalfDay ? 'Sí' : 'No'}\nMapa: ${googleMapsLink}`);
+    const whatsappLink = `https://wa.me/541144382987?text=${whatsappMessage}`;
+
+    const whatsappButton = document.getElementById('whatsapp');
+    whatsappButton.style.display = 'inline-block';
+    whatsappButton.onclick = () => {
+        window.open(whatsappLink, '_blank');
+    };
+});
 
 
-                function calculateRoute(origin, destination, month, date, destinationName, isHalfDay) {
-                    if (routeControl) {
-                        map.removeControl(routeControl);
-                    }
+            // whatsapppp--------------------------------
 
-                    routeControl = L.Routing.control({
-                        waypoints: [
-                            L.latLng(origin[0], origin[1]),
-                            L.latLng(destination[0], destination[1])
-                        ],
-                        routeWhileDragging: true,
-                        lineOptions: {
-                            styles: [{ color: '#00000000', weight: 4, opacity: 0.2 }]
-                        },
-                        createMarker: () => null,
-                        showAlternatives: false,
-                        instructions: false
-                    }).addTo(map);
-
-                    routeControl.on('routesfound', (e) => {
-                        const routes = e.routes;
-                        const distance = routes[0].summary.totalDistance / 1000;
-
-                        let basePrice = 100000 + (month * 3000);
-                        let totalPrice = basePrice;
-
-                        let extraKm = distance - 3;
-                        if (extraKm > 0) {
-                            totalPrice += extraKm * 2000;
-                        }
-
-                        // Aplicar descuento si es media jornada
-                        if (isHalfDay) {
-                            totalPrice *= 0.7;
-                        }
-
-                        totalPrice = totalPrice.toFixed(0);
-                        const formattedDate = new Date(date).toLocaleDateString('es-ES');
-
-                        const resultText =
-                            `Destino: ${destinationName}<br>` +
-                            `Destino: ${destinationN}<br>` +
-                            `Fecha: ${formattedDate}<br>` +
-                            `Distancia: ${distance.toFixed(2)} km<br>` +
-                            `Precio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
-
-                        document.getElementById('result').innerHTML = resultText;
-
-                        const googleMapsLink = `https://www.google.com/maps?q=${destination[0]},${destination[1]}`;
-                        const whatsappMessage = encodeURIComponent(`Destino: ${destinationName}\Destino: ${destinationN}\nFecha: ${formattedDate}\nDistancia: ${distance.toFixed(2)} km\nPrecio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}\nMapa: ${googleMapsLink}`);
-                        const whatsappLink = `https://wa.me/541144382987?text=${whatsappMessage}`;
-
-                        const whatsappButton = document.getElementById('whatsapp');
-                        whatsappButton.style.display = 'inline-block';
-                        whatsappButton.onclick = () => {
-                            window.open(whatsappLink, '_blank');
-                        };
-                    });
-
-                    routeControl.on('routingerror', () => {
-                        alert("No se pudo calcular la ruta. Intenta con otra ubicación.");
-                    });
-                }
-
-
-                totalPrice = totalPrice.toFixed(0);
-                const formattedDate = new Date(date).toLocaleDateString('es-ES');
-
-                const resultText =
-                    `Destino: ${destinationName}<br>` +
-                    `Fecha: ${formattedDate}<br>` +
-                    `Distancia: ${distance.toFixed(2)} km<br>` +
-                    `Precio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
-
-                document.getElementById('result').innerHTML = resultText;
-
-                const googleMapsLink = `https://www.google.com/maps?q=${destination[0]},${destination[1]}`;
-                const whatsappMessage = encodeURIComponent(`Destino: ${destinationName}\nFecha: ${formattedDate}\nDistancia: ${distance.toFixed(2)} km\nPrecio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}\nMapa: ${googleMapsLink}`);
-                const whatsappLink = `https://wa.me/541144382987?text=${whatsappMessage}`;
-
-                const whatsappButton = document.getElementById('whatsapp');
-                whatsappButton.style.display = 'inline-block';
-                whatsappButton.onclick = () => {
-                    window.open(whatsappLink, '_blank');
-                };
-            });
-
-            routeControl.on('routingerror', () => {
-                alert("No se pudo calcular la ruta. Intenta con otra ubicación.");
-            });
+           
 
 
             document.getElementById('half-day').addEventListener('click', () => {
@@ -685,6 +727,9 @@
                 subdomains: 'abcd',
                 maxZoom: 19
             }).addTo(map);
+
+
+
 
 
             // Aplicar el descuento si el checkbox está marcado
