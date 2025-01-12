@@ -1,199 +1,426 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa con LeafletJS y Cálculo de Costo</title>
+    <title>Mapa con Tema Cambiable</title>
+    <link rel="stylesheet" href="ver.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            border: none;
+            outline: none;
+            /* Eliminar el borde de enfoque */
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #eeeeee;
+            color: #000;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
         #map {
             height: 500px;
-            width: 100%;
+            width: 90%;
+            border-radius: 12px;
+            box-shadow: 3px 3px 10px 5px #bbbbbbb4;
         }
+
+        #theme-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background-color: #ffffff00;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 50%;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            transition: background-color 0.3s;
+        }
+
+        #theme-toggle:hover {
+            background: #fff;
+        }
+
+        #whatsapp {
+            margin-top: 10px;
+            margin-bottom: 40px;
+            padding: 10px;
+            border: none;
+            background-color: rgb(255, 255, 255);
+            box-shadow: 3px 3px 10px 5px #bbbbbbb4;
+            color: rgb(0, 0, 0);
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode #theme-toggle {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode #theme-toggle:hover {
+            background-color: #444;
+        }
+
+        .dark-mode #map {
+            box-shadow: 3px 3px 20px 5px #bbbbbb13;
+
+        }
+
+        .dark-mode #calculate {
+            box-shadow: 3px 3px 20px 5px #bbbbbb00;
+            background-color: #333;
+            color: #fff;
+
+        }
+
+        .dark-mode #whatsapp {
+            background-color: #000;
+            color: white;
+            box-shadow: 3px 3px 10px 5px #bbbbbb00;
+        }
+        .dark-mode #destination-name {
+            box-shadow: 3px 3px 20px 5px #bbbbbb00;
+            background-color: #333;
+            color: #fff;
+        }
+        .dark-mode   #destination-name:focus{
+            box-shadow: 3px 3px 20px 5px #bbbbbb00;
+            background-color: #333;
+            color: #fff;
+        }
+        h1 {
+            margin: 0px 0px 20px 0px;
+        }
+
         .container {
             margin: 20px;
         }
-        .leaflet-routing-container {
-            display: none !important;
+
+        .c-1 {
+            width: 100%;
+            height: auto;
+            display: flex;
+            justify-content: center;
+            flex-direction: row;
+            flex-wrap: nowrap;
         }
-        .leaflet-bar,
-        .leaflet-routing-controls {
-            display: none !important;
+
+        .d-mapa {
+            width: 100%;
+            height: auto;
+            display: flex;
+            justify-content: center;
         }
-        .leaflet-control-zoom {
-            display: none !important;
+
+        #calculate {
+            width: 300px;
+            padding: 10px;
+            background-color: rgb(255, 255, 255);
+            color: #000000;
+            box-shadow: 3px 3px 10px 5px #bbbbbbb4;
+        }
+
+        input[type="date"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            box-shadow: 3px 3px 10px 5px #bbbbbbb4;
+
+            border: none;
+            outline: none;
+            /* Eliminar el borde de enfoque */
+        }
+
+        /* Estilo cuando el calendario está abierto */
+        input[type="date"]:focus {
+            border-color: #000000;
+            background-color: #ffffff;
+        }
+
+        /* Estilo del calendario en modo oscuro */
+        .dark-mode input[type="date"] {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            outline: none;
+            box-shadow: 3px 3px 10px 5px #bbbbbb00;
+
+
+        }
+
+        .dark-mode input[type="date"]:focus {
+            background-color: #444;
+            border: none;
+            outline: none;
+
+        }
+
+        /* Estilo del mini calendario en modo oscuro */
+        .dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
+            background-color: #444;
+            border-radius: 5px;
+        }
+
+        .dark-mode input[type="date"]:hover::-webkit-calendar-picker-indicator {
+            background-color: #555;
+        }
+
+        /* Estilo para el campo de texto de destino */
+        #destination-name {
+            padding: 10px;
+            font-size: 16px;
+   
+            border-radius: 5px;
+            background-color: #ffffff;
+            cursor: pointer;
+            box-shadow: 3px 3px 10px 5px #bbbbbbb4;
+
+            transition: background-color 0.3s;
+        }
+
+        /* Estilo cuando el campo de texto tiene foco (cuando haces clic en él) */
+        #destination-name:focus {
+            border-color: #ffffff;
+            background-color: #ffffff;
+            box-shadow: 3px 3px 10px 5px #bbbbbbb4;
+
+
+        }
+
+        @media (max-width: 500px) {
+            .c-1 {
+                width: 100%;
+                height: auto;
+                display: flex;
+                justify-content: center;
+                flex-direction: column;
+                flex-wrap: nowrap;
+            }
+        }
+
+        @media (min-width: 501px) {
+            .c-1 {
+                width: 100%;
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .container {
+                width: 400px;
+                height: 500px;
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+        @media (min-width: 701px) {
+            .container {
+                width: 700px;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Mapa con LeafletJS y Cálculo de Distancia</h1>
-        
-        <label for="date">Selecciona la fecha:</label>
-        <input type="date" id="date">
-        <br><br>
+    <div class="c-1">
+        <div class="container">
+            <h1>Precios De Fotos</h1>
 
-        <label for="destination-name">Introduce un destino (opcional):</label>
-        <input type="text" id="destination-name" placeholder="Ej: Trabajo, Casa de Juan">
-        <br><br>
+            <label for="date">Selecciona la fecha:</label>
+            <input type="date" id="date">
+            <br><br>
 
-        <button id="calculate">Buscar y Calcular</button>
-        <br><br>
-        
-        <div id="details">
-            <p id="result"></p>
-            <button id="whatsapp" style="display:none;">Enviar a WhatsApp</button>
+            <label for="destination-name">Introduce un destino:</label>
+            <input type="text" id="destination-name" placeholder="Ej: la lonja pilar">
+            <br><br>
+
+            <button id="calculate">Buscar y Calcular Precio.</button>
+            <br><br>
+
+            <div id="details">
+                <p id="result"></p>
+                <button id="whatsapp">Enviar a WhatsApp</button>
+            </div>
         </div>
-        
-        <div id="map"></div>
+        <div class="d-mapa">
+            <div id="map"></div>
+        </div>
     </div>
+    <button id="theme-toggle"><i class="fas fa-moon"></i></button>
 
     <script>
-    const initialPoint = [-34.452115, -58.826254];
-    const map = L.map('map').setView(initialPoint, 13);
+        const initialPoint = [-34.452115, -58.826254];
+        const map = L.map('map').setView(initialPoint, 13);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+        // Tile layers
+        const lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        });
 
-    let routeControl;
-    let destinationMarker;
-    let selectedDestination = null;
-    let destinationName = "";
+        const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            attribution: '© <a href="https://www.carto.com/">CartoDB</a>'
+        });
 
-    const locationIcon = L.icon({
-        iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34]
-    });
+        // Initialize map with light theme
+        let currentTiles = lightTiles;
+        currentTiles.addTo(map);
 
-    // Evento al seleccionar un punto en el mapa
-    map.on('click', (e) => {
-        selectedDestination = [e.latlng.lat, e.latlng.lng];
-        destinationName = "Ubicación seleccionada en el mapa";
-        setDestinationMarker(selectedDestination, destinationName);
-    });
+        let routeControl;
+        let destinationMarker;
+        let selectedDestination = null;
+        let destinationName = "";
 
-    document.getElementById('calculate').addEventListener('click', () => {
-        const date = document.getElementById('date').value;
-        const inputDestinationName = document.getElementById('destination-name').value;
+        const locationIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+        });
 
-        // Usar el nombre del destino ingresado si existe, de lo contrario mantener el seleccionado en el mapa
-        if (inputDestinationName) {
-            destinationName = inputDestinationName;
-        }
+        map.on('click', (e) => {
+            selectedDestination = [e.latlng.lat, e.latlng.lng];
+            destinationName = "Ubicación seleccionada en el mapa";
+            setDestinationMarker(selectedDestination, destinationName);
+        });
 
-        if (!selectedDestination && !inputDestinationName) {
-            alert("Por favor, selecciona un punto en el mapa o escribe un destino.");
-            return;
-        }
+        document.getElementById('calculate').addEventListener('click', () => {
+            const date = document.getElementById('date').value;
+            const inputDestinationName = document.getElementById('destination-name').value;
 
-        if (!date) {
-            alert("Por favor, selecciona una fecha.");
-            return;
-        }
-
-        if (inputDestinationName && !selectedDestination) {
-            // Si se ingresó un destino, buscarlo en el mapa
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputDestinationName)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length === 0) {
-                        alert("No se encontró la ubicación escrita. Intenta con otra.");
-                        return;
-                    }
-
-                    const { lat, lon } = data[0];
-                    selectedDestination = [parseFloat(lat), parseFloat(lon)];
-                    setDestinationMarker(selectedDestination, inputDestinationName);
-                    const month = new Date(date).getMonth();
-                    calculateRoute(initialPoint, selectedDestination, month, date, destinationName);
-                })
-                .catch(error => {
-                    console.error("Error al buscar la ubicación:", error);
-                    alert("Hubo un problema al buscar la ubicación.");
-                });
-        } else {
-            // Si ya hay una ubicación seleccionada en el mapa
-            const month = new Date(date).getMonth();
-            calculateRoute(initialPoint, selectedDestination, month, date, destinationName);
-        }
-    });
-
-    function setDestinationMarker(destination, popupText) {
-        if (destinationMarker) {
-            map.removeLayer(destinationMarker);
-        }
-
-        destinationMarker = L.marker(destination, { icon: locationIcon })
-            .addTo(map)
-            .bindPopup(popupText)
-            .openPopup();
-
-        map.setView(destination, 13);
-    }
-
-    function calculateRoute(origin, destination, month, date, destinationName) {
-        if (routeControl) {
-            map.removeControl(routeControl);
-        }
-
-        routeControl = L.Routing.control({
-            waypoints: [
-                L.latLng(origin[0], origin[1]),
-                L.latLng(destination[0], destination[1])
-            ],
-            routeWhileDragging: true,
-            lineOptions: {
-                styles: [{ color: '#00000000', weight: 4, opacity: 0.2 }]
-            },
-            createMarker: () => null,
-            showAlternatives: false,
-            instructions: false
-        }).addTo(map);
-
-        routeControl.on('routesfound', (e) => {
-            const routes = e.routes;
-            const distance = routes[0].summary.totalDistance / 1000;
-
-            let basePrice = 100000 + (month * 3000);
-            let totalPrice = basePrice;
-
-            let extraKm = distance - 3;
-            if (extraKm > 0) {
-                totalPrice += extraKm * 2000;
+            if (!date) {
+                alert("Por favor, selecciona una fecha.");
+                return;
             }
 
-            totalPrice = totalPrice.toFixed(0);
-            const formattedDate = new Date(date).toLocaleDateString('es-ES');
+            if (inputDestinationName) {
+                destinationName = inputDestinationName;
+            }
 
-            const resultText =
-                `Destino: ${destinationName}<br>` +
-                `Fecha: ${formattedDate}<br>` +
-                `Distancia: ${distance.toFixed(2)} km<br>` +
-                `Precio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+            if (inputDestinationName && !selectedDestination) {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputDestinationName)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length === 0) {
+                            alert("No se encontró la ubicación escrita. Intenta con otra.");
+                            return;
+                        }
 
-            document.getElementById('result').innerHTML = resultText;
+                        const { lat, lon } = data[0];
+                        selectedDestination = [parseFloat(lat), parseFloat(lon)];
+                        setDestinationMarker(selectedDestination, inputDestinationName);
+                        calculateRoute(initialPoint, selectedDestination, date, destinationName);
+                    })
+                    .catch(error => {
+                        console.error("Error al buscar la ubicación:", error);
+                        alert("Hubo un problema al buscar la ubicación.");
+                    });
+            } else {
+                calculateRoute(initialPoint, selectedDestination, date, destinationName);
+            }
+        });
 
-            const googleMapsLink = `https://www.google.com/maps?q=${destination[0]},${destination[1]}`;
-            const whatsappMessage = encodeURIComponent(`Destino: ${destinationName}\nFecha: ${formattedDate}\nDistancia: ${distance.toFixed(2)} km\nPrecio: $${totalPrice.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}\nMapa: ${googleMapsLink}`);
-            const whatsappLink = `https://wa.me/541144382987?text=${whatsappMessage}`;
-
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const body = document.body;
+            const themeToggle = document.getElementById('theme-toggle');
+            const icon = themeToggle.querySelector('i');
             const whatsappButton = document.getElementById('whatsapp');
-            whatsappButton.style.display = 'inline-block';
-            whatsappButton.onclick = () => {
-                window.open(whatsappLink, '_blank');
-            };
+
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                icon.className = 'fas fa-moon';
+                map.removeLayer(darkTiles);
+                lightTiles.addTo(map);
+                currentTiles = lightTiles;
+            } else {
+                body.classList.add('dark-mode');
+                icon.className = 'fas fa-sun';
+                map.removeLayer(lightTiles);
+                darkTiles.addTo(map);
+                currentTiles = darkTiles;
+            }
         });
 
-        routeControl.on('routingerror', () => {
-            alert("No se pudo calcular la ruta. Intenta con otra ubicación.");
-        });
-    }
+        function setDestinationMarker(destination, popupText) {
+            if (destinationMarker) {
+                map.removeLayer(destinationMarker);
+            }
+
+            destinationMarker = L.marker(destination, { icon: locationIcon })
+                .addTo(map)
+                .bindPopup(popupText)
+                .openPopup();
+
+            map.setView(destination, 13);
+        }
+
+        function calculateRoute(origin, destination, date, destinationName) {
+            if (routeControl) {
+                map.removeControl(routeControl);
+            }
+
+            routeControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(origin[0], origin[1]),
+                    L.latLng(destination[0], destination[1])
+                ],
+                routeWhileDragging: true,
+                lineOptions: {
+                    styles: [{ color: 'blue', weight: 4, opacity: 0.7 }]
+                },
+                createMarker: () => null,
+                showAlternatives: false,
+                instructions: false
+            }).addTo(map);
+
+            routeControl.on('routesfound', (e) => {
+                const routes = e.routes;
+                const distance = routes[0].summary.totalDistance / 1000;
+
+                const resultText =
+                    `Destino: ${destinationName}<br>` +
+                    `Distancia: ${distance.toFixed(2)} km`;
+
+                document.getElementById('result').innerHTML = resultText;
+                document.getElementById('').disabled = false;
+            });
+        }
+
+
+        
+
     </script>
+    
 </body>
+
 </html>
